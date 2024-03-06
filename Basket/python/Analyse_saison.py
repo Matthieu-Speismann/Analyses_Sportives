@@ -1,15 +1,15 @@
-### Imports:
-from data_analysis_methods import acp_plot, correlation_plot, pairs_plot
+#################### Imports: ####################
+from data_analysis_methods import *
 import pandas as pd
 import pandasql as pdsql
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-### Lecture des données:
+#################### Lecture des données brutes: ####################
 path = "Analyses_Sportives/Basket/data/NBA Player Stats 2022-2023 - Regular.csv"
 data = pd.read_csv(path, sep = ';')
 
-### Preprocessing des données: 
+#################### Preprocessing: ####################
 
 # Exclure 'Rk'
 data = data[data.columns.difference(['Rk'])]
@@ -27,33 +27,30 @@ query_anti_doublon = """
             GROUP BY Player
             HAVING COUNT(DISTINCT TEAM) = 1)
 """
-
-# Exécution de la requête;:
 data = pdsql.sqldf(query_anti_doublon)
 
 # Liste des individus:
 individus = data['Player']
 
-### Analyse:
+# Data numérique:
+data_numeric = data[data.columns.difference(['Player', 'Pos', 'Team'])]
 
-# Requête SQL pour sélectionner les joueurs selon conditions:
+#################### Analyse: ####################
+
+# Requête SQL pour sélectionner les joueurs selon conditions d'étude:
 query: str = """
     SELECT * FROM data
 """
-
-# Exécution de la requête:
 data = pdsql.sqldf(query)
-
-# Variable Catégorielle:
+# Variable Catégorielle (à faire après chaque redéfinition de data):
 data['Pos'] = data['Pos'].astype('category')
 
 # Etude de la corrélation:
-data_numeric = data[data.columns.difference(['Player', 'Pos', 'Team'])]
 correlation_plot(data_numeric, "Saison 2022-2023")
 
 # Selection des données d'intérêt:
 var_used = ['TRB', 'AST', 'STL', 'BLK', 'PTS']
 
-# Fonction finale:
+# ACP:
 acp_plot(data, "Saison 2022-2023", var_used = var_used,
         individus = individus, var_coloration = 'Pos')
