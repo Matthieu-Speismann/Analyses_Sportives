@@ -28,7 +28,11 @@ data['Away'] = data['Away'].astype('category')
 data_numerical = data[data.columns.difference(['G', 'Away', 'Opp'])]
 
 #################### Analyse: ####################
-plot_selected_pair(data, 'G', 'Win', style = 'bar', var_coloration = 'Away',
-                    lignes=[Ligne('y', 0)])
+# plot_selected_pair(data, 'G', 'Win', style = 'bar', var_coloration = 'Away', 
+#                    title = "Victor Wemby's games and wins", lignes = [Ligne('y', 0)])
 
 # correlation_plot(data_numerical)
+
+hierarchical_clustering(data_numerical, ['PTS', 'TRB', 'AST', 'BLK', 'STL'], title = "")
+
+#boxplot(data_numerical, var_used = ['Win', 'PTS', 'TRB'], title = "Saison 2022-2023")
