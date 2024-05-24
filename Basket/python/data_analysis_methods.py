@@ -1,5 +1,5 @@
 """Fichier Python contenant des fonctions utiles pour l'analyse de données.
-- 
+-
 Fonctions implémentées:
     - `standardize`: Normalise un DataFrame donné.
     - `acp_plot`: Affiche graphiquement les résultats de l'Analyse en Composantes Principales (ACP).
@@ -24,6 +24,8 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import seaborn as sns
+from scipy.cluster.hierarchy import dendrogram, linkage
+
 
 class Ligne:
     """
@@ -43,8 +45,9 @@ class Ligne:
         - color: `str`, optional): The color of the line (default is `'black'`).
         - style: `str`, optional): The style of the line (default is `'-'`).
     """
-    
-    def __init__(self, xy: 'str', value: float, color: str = 'black', style: str = '-', label: str = None):
+
+    def __init__(self, xy: str, value: float, color: str = 'black',
+                 style: str = '-', label: str = None):
         """
         Initialise un objet Ligne.
         -
@@ -74,22 +77,24 @@ class Ligne:
         -
         Si `xy` est défini sur 'x', une ligne verticale sera tracée à la valeur spécifiée.
         Si `xy` est défini sur 'y', une ligne horizontale sera tracée à la valeur spécifiée.
-        
+
         Paramètres:
             - self: `object`: L'instance de la classe Ligne.
         --------------------------
         Plot a vertical or horizontal line on the current plot.
-        - 
+        -
         If `xy` is set to 'x', a vertical line will be plotted at the specified `value`.
         If `xy` is set to 'y', a horizontal line will be plotted at the specified `value`.
-        
+
         Parameters:
             - self: `object`: The instance of the class Ligne.
         """
         if self.xy == 'x':
-            plt.axvline(self.value, color=self.color, label= self.label, linewidth=1, linestyle=self.style)
+            plt.axvline(self.value, color=self.color,
+                        label=self.label, linewidth=1, linestyle=self.style)
         elif self.xy == 'y':
-            plt.axhline(self.value, color=self.color, label= self.label, linewidth=1, linestyle=self.style)
+            plt.axhline(self.value, color=self.color, label=self.label,
+                        linewidth=1, linestyle=self.style)
 
 
 def standardize(data: pd.DataFrame) -> pd.DataFrame:
@@ -97,15 +102,15 @@ def standardize(data: pd.DataFrame) -> pd.DataFrame:
     Normalise le DataFrame donné.
     -
     Fait en soustrayant la moyenne et en divisant par l'écart-type.
-    
+
     Argument:
         - data: `pd.DataFrame`: Le DataFrame d'entrée à normaliser.
-    
+
     Renvoie:
         - `pd.DataFrame`: Le DataFrame normalisé.
     --------------------------------------------------
-    Standardizes the given DataFrame. 
-    - 
+    Standardizes the given DataFrame.
+    -
     Done by subtracting the mean and dividing by the standard deviation.
 
     Argument:
@@ -117,8 +122,9 @@ def standardize(data: pd.DataFrame) -> pd.DataFrame:
     return (data - data.mean()) / data.std()
 
 
-def acp_plot(data: pd.DataFrame, titre: str, var_used :list[str], 
-                  standardization = True, individus = [], var_coloration:str = None):
+def acp_plot(data: pd.DataFrame, titre: str, var_used: list[str],
+             standardization=True, individus=[],
+             var_coloration: str = None):
     """
     Affiche graphiquement les résultats de l'Analyse en Composantes Principales (ACP).
     -
@@ -126,10 +132,10 @@ def acp_plot(data: pd.DataFrame, titre: str, var_used :list[str],
         - data: `pd.DataFrame`: Le dataframe contenant les données.
         - titre: `str`: Le titre du graphique.
         - var_used: `list[str]: La liste des variables utilisées pour l'ACP.
-        - standardization: `bool`, optional: Indique si les données doivent être standardisées. 
+        - standardization: `bool`, optional: Indique si les données doivent être standardisées.
             Par défaut: `True`.
         - individus `list[str]`, optional: La liste des noms des individus à afficher. Par défaut, `[]`.
-        - var_coloration `str`, optional: Le nom de la variable utilisée pour la coloration des points. 
+        - var_coloration `str`, optional: Le nom de la variable utilisée pour la coloration des points.
             Par défaut, `None`.
     --------------------------------------------------
     Plot the results of a Principal Component Analysis (PCA).
@@ -138,17 +144,17 @@ def acp_plot(data: pd.DataFrame, titre: str, var_used :list[str],
         - data: `pd.DataFrame`: The dataframe containing the data.
         - titre: `str`: The title of the plot.
         - var_used: `list[str]`: The list of variables used for the PCA.
-        - standardization `bool`, optional: Indicates if the data should be standardized. 
+        - standardization `bool`, optional: Indicates if the data should be standardized.
             By default: `True`.
         - individus `list[str]`, optional): The list of the names of the individuals to display. By default, `[]`.
-        - var_coloration `str`, optional: The name of the variable used for the coloration of the points. 
+        - var_coloration `str`, optional: The name of the variable used for the coloration of the points.
             By default, `None`.
     """
     pca = PCA()
-    
+
     data_used = data.loc[:, var_used]
-    
-    if standardization == True:
+
+    if standardization is True:
         data_standardized = standardize(data_used)
         acp_result = pca.fit_transform(data_standardized)
     else:
@@ -156,35 +162,40 @@ def acp_plot(data: pd.DataFrame, titre: str, var_used :list[str],
 
     # Visualiser les résultats avec un biplot et les noms des individus
     plt.figure(1)
-    
-    if var_coloration == None:
+
+    if var_coloration is None:
         plt.scatter(acp_result[:, 0], acp_result[:, 1])
     else:
-        #Colorier selon la variable de coloration:
-        scatter = plt.scatter(acp_result[:, 0], acp_result[:, 1], c = data[var_coloration].cat.codes, cmap='turbo')
+        # Colorier selon la variable de coloration:
+        scatter = plt.scatter(acp_result[:, 0], acp_result[:, 1],
+                              c=data[var_coloration].cat.codes, cmap='turbo')
         # Ajouter une légende de couleur:
-        plt.legend(handles=scatter.legend_elements()[0], labels=sorted(data[var_coloration].unique()), title=var_coloration)
+        plt.legend(handles=scatter.legend_elements()[0],
+                   labels=sorted(data[var_coloration].unique()),
+                   title=var_coloration)
 
-        
     # Ajouter les noms des individus en label
     for i, txt in enumerate(individus):
-        plt.annotate(txt, (acp_result[i, 0], acp_result[i, 1]), fontsize = 8)
+        plt.annotate(txt, (acp_result[i, 0], acp_result[i, 1]),
+                     fontsize=8)
 
     # Afficher les pourcentages d'information sur chaque axe:
     var_ratios = pca.explained_variance_ratio_
 
     # Ajouter des étiquettes aux axes:
     plt.title(titre)
-    plt.xlabel(f"Axe 1 - {var_ratios[0]* 100:.2f}%")
-    plt.ylabel(f"Axe 2 - {var_ratios[1]* 100:.2f}%")
+    plt.xlabel(f"Axe 1 - {var_ratios[0] * 100:.2f}%")
+    plt.ylabel(f"Axe 2 - {var_ratios[1] * 100:.2f}%")
     plt.grid(True)
-    
+
     plt.figure(2)
     # Ajouter les vecteurs des variables dans l'espace des composantes principales (biplot)
     plt.title('Contribution des variables sur les axes')
-    for i, (comp1, comp2) in enumerate(zip(pca.components_[0, :], pca.components_[1, :])):
+    for i, (comp1, comp2) in enumerate(zip(pca.components_[0, :],
+                                           pca.components_[1, :])):
         plt.arrow(0, 0, comp1, comp2, color='r', alpha=1)
-        plt.text(comp1, comp2, data_used.columns[i], color='r', ha='right', va='bottom', fontsize=8)
+        plt.text(comp1, comp2, data_used.columns[i],
+                 color='r', ha='right', va='bottom', fontsize=8)
 
     plt.show()
 
@@ -205,28 +216,35 @@ def correlation_plot(data: pd.DataFrame, title: str = None):
     """
     correlations = data.corr()
     plt.figure()
-    
+
     # Heatmap des coefficients de corrélation:
-    heatmap = sns.heatmap(correlations, annot=True, annot_kws={"fontsize":6}, fmt='.2f', cmap='coolwarm', cbar=True, square=True, linewidths=0.5, linecolor='black')
-    
+    heatmap = sns.heatmap(correlations, annot=True, annot_kws={"fontsize": 6},
+                          fmt='.2f', cmap='coolwarm', cbar=True, square=True,
+                          linewidths=0.5, linecolor='black')
+
     # Titre ou non:
     if title is not None:
         plt.title(title)
 
     # Gestion de l'axe x:
-    heatmap.set_xticks(np.arange(len(correlations.columns)) + 0.5, minor=False)
-    heatmap.set_xticklabels(correlations.columns, rotation = 90, ha = 'right', fontsize=8)
-    
-    # Gestions de l'axe y:
-    heatmap.set_yticks(np.arange(len(correlations.columns)) + 0.5, minor=False)
-    heatmap.set_yticklabels(correlations.columns, rotation = 0, ha = 'right', fontsize=8)
+    heatmap.set_xticks(np.arange(len(correlations.columns)) + 0.5,
+                       minor=False)
+    heatmap.set_xticklabels(correlations.columns, rotation=90,
+                            ha='right', fontsize=8)
 
+    # Gestions de l'axe y:
+    heatmap.set_yticks(np.arange(len(correlations.columns)) + 0.5,
+                       minor=False)
+    heatmap.set_yticklabels(correlations.columns, rotation=0,
+                            ha='right', fontsize=8)
     plt.tight_layout()
     plt.show()
 
 
-def plot_selected_pair(data: pd.DataFrame, var_x: str, var_y: str, style: str = 'scatter', color: str = 'blue',
-                        var_coloration: str = None, title: str = None, lignes: list[Ligne] = []):
+def plot_selected_pair(data: pd.DataFrame, var_x: str, var_y: str,
+                       style: str = 'scatter', color: str = 'blue',
+                       var_coloration: str = None, title: str = None,
+                       lignes: list[Ligne] = []):
     """
     Represente graphiquement une paire de variables sélectionnée d'un DataFrame.
     -
@@ -256,12 +274,12 @@ def plot_selected_pair(data: pd.DataFrame, var_x: str, var_y: str, style: str = 
     y = list(data[var_y])
 
     plt.figure()
-    
+
     # Ajout de ligne si nécessaire:
     for ligne in lignes:
         ligne.plot()
-    
-    # Ajout de titre et labels:    
+
+    # Ajout de titre et labels:  
     if title is not None:
         plt.title(title)
 
@@ -271,61 +289,55 @@ def plot_selected_pair(data: pd.DataFrame, var_x: str, var_y: str, style: str = 
     # Plot des données, selon le style scatter:
     if style == 'scatter':
         if var_coloration is None:
-            plt.scatter(x, y, marker = 'o', color = color)
+            plt.scatter(x, y, marker='o', color=color)
 
         # Gestion de la coloration catégorielle:
         if var_coloration is not None:
-            scatter = plt.scatter(x, y, marker = 'o', c = data[var_coloration].cat.codes, cmap='plasma')
-            plt.legend(handles=scatter.legend_elements()[0], labels=sorted(data[var_coloration].unique()), title=var_coloration)
-    
+            scatter = plt.scatter(x, y, marker='o',
+                                  c=data[var_coloration].cat.codes,
+                                  cmap='plasma')
+            plt.legend(handles=scatter.legend_elements()[0],
+                       labels=sorted(data[var_coloration].unique()),
+                       title=var_coloration)
+
     # Plot des données, selon le style bar:
     elif style == 'bar':
-        """bars = plt.bar(x,y, color = color)
-        
-        # Gestion de la coloration catégorielle:
-        unique_categories = sorted(data[var_coloration].unique())
-        num_categories = len(unique_categories)
-        color_map = plt.cm.get_cmap('plasma', num_categories)
-        if var_coloration is not None:
-            for i, bar in enumerate(bars):
-                bar.set_color(color_map(data[var_coloration].cat.codes[i] / num_categories))  
-            plt.legend(handles = bars, labels = unique_categories, title=var_coloration)
+        if var_coloration is None:
+            bars = sns.barplot(x=var_x, y=var_y, data=data, color=color)
+        elif var_coloration is not None:
+            bars = sns.barplot(x=var_x, y=var_y, data=data, hue=var_coloration,
+                               palette='Set1')
 
         # Affichage au dessus des barres:
-        for bar in bars:
-            yval = bar.get_height()
-            plt.text(bar.get_x() + bar.get_width() / 2, yval, round(yval, 2), ha='center', va='bottom', fontsize = 6)"""
-
-        if var_coloration is None:
-            bars = sns.barplot(x=var_x, y=var_y, data=data, color = color)
-        elif var_coloration is not None:
-            bars = sns.barplot(x=var_x, y=var_y, data=data, hue=var_coloration, palette='Set1')
-            
-         # Affichage au dessus des barres:
         for bar in bars.patches:
-            bars.annotate(f'{bar.get_height():.0f}', (bar.get_x() + bar.get_width() / 2., bar.get_height()),
-                        ha='center', va='center', xytext=(0, 6), fontsize = 8, textcoords='offset points')
+            bars.annotate(f'{bar.get_height():.0f}',
+                          (bar.get_x() + bar.get_width() / 2.,
+                           bar.get_height()),
+                          ha='center', va='center', xytext=(0, 6),
+                          fontsize=8, textcoords='offset points')
+
+        plt.xticks(ticks=range(len(x)), labels=[f"{val:.0f}" for val in x])
 
     plt.show()
 
 
 def pairs_plot(data):
     """
-    Affiche graphiquement les paires de variables d'un DataFrame. 
+    Affiche graphiquement les paires de variables d'un DataFrame.
     -
     Affiche graphiquement toutes les paires du DataFrame donné, ainsi que le coefficient de corrélation.
-    
+
     Arguments:
         - data: `pd.DataFrame`: Le DataFrame contenant les données.
     --------------------------------------------------
     Plot the pairs of variables in the given DataFrame.
     -
-    Plot the pairs of variables in the given DataFrame 
+    Plot the pairs of variables in the given DataFrame
     and the correlation coefficient.
     Arguments:
         - data: `pd.DataFrame`: The DataFrame containing the data.
     """
-    
+
     # Coefficient de corrélation (représentation matricielle):
     cor_matrix = data.corr().values
 
@@ -334,16 +346,90 @@ def pairs_plot(data):
     cor_matrix = data.corr().values
 
     # Ajouter les coefficients de corrélation sur chaque subplot hors diagonale
-    for i, (ax, corr) in enumerate(zip(pair_plot.axes.flat, cor_matrix.flatten())):
+    for i, (ax, corr) in enumerate(zip(pair_plot.axes.flat,
+                                       cor_matrix.flatten())):
         if i % (len(data.columns) + 1) != 0:  # Ne pas ajouter sur la diagonale
-            ax.annotate(f"Corr: {corr:.2f}", xy=(0.8, 0.95), xycoords='axes fraction', ha='center', va='center', fontsize=8)
+            ax.annotate(f"Corr: {corr:.2f}", xy=(0.8, 0.95),
+                        xycoords='axes fraction', ha='center',
+                        va='center', fontsize=8)
     plt.tight_layout()
 
     plt.show()
 
 
+def boxplot(data: pd.DataFrame, var_used: list[str] = None, title: str = None):
+    """
+    Génère les boites à moustaches des données entrées.
+    -
+    Paramètres:
+    - data `pd.DataFrame`: Les données à représenter.
+    - var_used `list[str]`, optionel: Les variables à utiliser pour le boxplot. Si None, toutes les variables du DataFrame seront utilisées.
+    - title `str`, optionel: Le titre du graphique.
+    --------------------------------------------------
+    Generate a boxplot for the given data.
+    -
+    Parameters:
+    - data `pd.DataFrame`: The data to be plotted.
+    - var_used `list[str]`, optional: The variables to be used for plotting. If None, all variables in the data will be used.
+    - title `str`, optional: The title of the plot.
+    """
+
+    if var_used is not None:
+        data = data[var_used]
+
+    plt.figure()
+    plt.boxplot(data)
+
+    # Gestion de l'axe x (nom des labels):
+    plt.xticks(np.arange(1, len(data.columns) + 1), data.columns)
+
+    if title is not None:
+        plt.title(title)
+    plt.xlabel("Variables")
+    plt.show()
+
+
+def hierarchical_clustering(data: pd.DataFrame, var_used: list[str] = None,
+                            method: str = 'ward', var_legend: str = None,
+                            title: str = None):
+    """"
+    Perform hierarchical clustering on the given data using the specified variable and method.
+    -
+    Parameters:
+    - data `pd.DataFrame`: The input data for clustering.
+    - var `str`, optional (Default is None): The variable to be used for clustering. If None, all variables in the data will be used. 
+    - method `str`, optional: The linkage method to be used for clustering. (Default is 'ward').
+    """
+
+    # Preprocessing:
+    if var_used is not None:
+        data_used = data.loc[:, var_used]
+    else:
+        data_used = data
+        
+    if var_legend is not None:
+        data_used = data_used.drop(columns=[var_legend])
+
+    # Definition du linkage:
+    Z = linkage(data_used, method=method)
+
+    # Plot the dendrogram:
+    plt.figure(figsize=(10, 5))
+    dendrogram(Z)
+
+    # Ajout de titre et labels:
+    plt.xlabel('Data Points')
+    if var_legend is not None:
+        plt.xticks(np.arange(1, len(data[var_legend]) + 1), data[var_legend])
+    plt.ylabel('Distance')
+    if title is not None:
+        plt.title(title)
+
+    plt.show()
+
+
 if __name__ == '__main__':
-    
+
     # Générer des données d'exemple
     np.random.seed(123)
     data = pd.DataFrame({
@@ -351,11 +437,5 @@ if __name__ == '__main__':
         'variable2': np.random.randn(100),
         'variable3': np.random.randn(100)
     })
-    
-    # Effectuer l'ACP avec scikit-learn
-    pca = PCA()
-    
-    # Afficher les résultats
-    "print(pd.DataFrame(acp_result, columns=[f'PC{i+1}' for i in range(data.shape[1])]))"
-    
-    acp_plot(data, 'Test')
+
+    hierarchical_clustering(data, var_used=['variable1', 'variable2'])
